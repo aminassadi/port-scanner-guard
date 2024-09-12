@@ -65,7 +65,7 @@ int xdp_pass(struct xdp_md *ctx)
 	void *data = (void *)(long)ctx->data;
 	void *data_end = (void *)(long)ctx->data_end;
 	uint32_t size = data_end - data;
-	if (size != 60)
+	if (size != 60) //syn packet size
 	 	return XDP_PASS;
 	//bpf_printk("size = %d\n", size);
 	struct ethhdr *eth = data;
@@ -73,6 +73,11 @@ int xdp_pass(struct xdp_md *ctx)
 	// data plane 
 	//
 
+	// int ret = bpf_perf_event_output(ctx, &perf_buff, BPF_F_CURRENT_CPU, data, size);  //write to perf buff
+    // if (ret != 0)
+    // {
+    //     bpf_printk("ERROR, output to perf buffer, code:%ld", ret);
+    // }
 
 	struct iphdr *ip;
 	long *value;
@@ -83,23 +88,23 @@ int xdp_pass(struct xdp_md *ctx)
 	if (data + pkt_len > data_end)
 		return XDP_DROP;
 	// map_index = ip->protocol;
-	// if (bpf_ntohs(eth->h_proto) == ETH_P_IP)
-	// 	bpf_printk("rcv packet protocol ipv4\n");
-	// else if (bpf_ntohs(eth->h_proto) == ETH_P_IPV6)
-	// 	bpf_printk("rcv packet protocol ipv6\n");
-	// else if (bpf_ntohs(eth->h_proto) == ETH_P_ARP)
-	// {
-	// 	// bpf_printk("rcv packet protocol ARP\n");
-	// 	return XDP_PASS;
-	// }
-	// else if ((bpf_ntohs(eth->h_proto) == ETH_P_PPP_MP))
-	// {
-	// 	bpf_printk("rcv packet protocol MULTI FRAME PROTOCOL\n");
-	// }
-	// else
-	// {
-	// 	bpf_printk("rcv packet protocol id:%d\n", bpf_ntohs(eth->h_proto));
-	// }
+	if (bpf_ntohs(eth->h_proto) == ETH_P_IP)
+		bpf_printk("rcv packet protocol ipv4\n");
+	else if (bpf_ntohs(eth->h_proto) == ETH_P_IPV6)
+		bpf_printk("rcv packet protocol ipv6\n");
+	else if (bpf_ntohs(eth->h_proto) == ETH_P_ARP)
+	{
+		// bpf_printk("rcv packet protocol ARP\n");
+		return XDP_PASS;
+	}
+	else if ((bpf_ntohs(eth->h_proto) == ETH_P_PPP_MP))
+	{
+		bpf_printk("rcv packet protocol MULTI FRAME PROTOCOL\n");
+	}
+	else
+	{
+		bpf_printk("rcv packet protocol id:%d\n", bpf_ntohs(eth->h_proto));
+	}
 	if(bpf_ntohl(ip->daddr) != 0xc0a8e783)
 		return XDP_PASS;
 	if (ip->protocol == IPPROTO_ICMP)
