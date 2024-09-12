@@ -12,6 +12,6 @@ set(SOURCE main.cpp)
 add_executable(${PROJECT_NAME} ${SOURCE})
 add_dependencies(${PROJECT_NAME}  bpf_skeleton)
 
-include_directories(.output)
+include_directories(.output ../libbpf/include)
 target_link_directories(${PROJECT_NAME} PRIVATE .output)
 target_link_libraries(${PROJECT_NAME} PRIVATE libbpf.a elf z)
